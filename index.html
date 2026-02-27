@@ -1,38 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>UT Defect Position</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body { margin:0; background:black; color:white; font-family:sans-serif; }
-.controls { padding:10px; background:#111; }
-input { width:70px; margin-right:10px; }
-button { padding:3px 10px; }
-canvas { display:block; margin:auto; background:black; }
+body{
+background:#111;
+color:white;
+font-family:sans-serif;
+margin:0;
+padding:10px;
+}
+
+.controls{
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+input{
+font-size:18px;
+padding:8px;
+}
+
+button{
+font-size:20px;
+padding:10px;
+background:#00aaff;
+color:white;
+border:none;
+border-radius:8px;
+}
+
+canvas{
+width:100%;
+height:auto;
+background:#222;
+margin-top:10px;
+border-radius:10px;
+}
 </style>
 </head>
+
 <body>
 
 <div class="controls">
-板厚(mm):
+板厚(mm)
 <input type="number" id="thickness" value="12">
 
-探触子位置(mm):
+探触子位置(mm)
 <input type="number" id="probeX" value="20">
 
-角度(°):
-<input type="number" id="angle" value="60">
+角度(°)
+<input type="range" id="angle" min="30" max="80" value="60" oninput="draw()">
+<span id="angleValue">60</span>°
 
-ビーム経路長(mm):
+ビーム経路長(mm)
 <input type="number" id="pathLength" value="20">
 
 <button onclick="draw()">表示</button>
 </div>
 
-<canvas id="canvas" width="650" height="420"></canvas>
+<canvas id="canvas" width="500" height="360"></canvas>
 
 <script>
-
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
@@ -50,110 +80,65 @@ const probe = parseFloat(document.getElementById("probeX").value);
 const angleDeg = parseFloat(document.getElementById("angle").value);
 const pathLength = parseFloat(document.getElementById("pathLength").value);
 
+document.getElementById("angleValue").innerText = angleDeg;
+
 const angleRad = angleDeg * Math.PI / 180;
 
 const bottomY = topY + t * scale;
 const a = (t / Math.tan(60 * Math.PI / 180)) * scale;
 
-// ===== 図面 =====
-ctx.strokeStyle = "red";
-ctx.lineWidth = 2;
+// 図面
+ctx.strokeStyle="red";
+ctx.lineWidth=2;
 
-// 柱
-ctx.beginPath();
-ctx.moveTo(rootX - gap*scale - 40, 40);
-ctx.lineTo(rootX - gap*scale - 40, 380);
-ctx.stroke();
-
-// ルート
-ctx.beginPath();
-ctx.moveTo(rootX, 40);
-ctx.lineTo(rootX, 380);
-ctx.stroke();
-
-// 上面
 ctx.beginPath();
 ctx.moveTo(rootX, topY);
 ctx.lineTo(600, topY);
 ctx.stroke();
 
-// 下面
 ctx.beginPath();
 ctx.moveTo(rootX, bottomY);
 ctx.lineTo(600, bottomY);
 ctx.stroke();
 
-// 開先
 ctx.beginPath();
 ctx.moveTo(rootX, topY);
 ctx.lineTo(rootX + a, topY);
 ctx.lineTo(rootX, bottomY);
 ctx.stroke();
 
-// ===== ビーム計算 =====
+// ビーム
 const probeXpx = rootX + probe * scale;
 const probeYpx = topY;
 
-const pathPx = pathLength * scale;
+let remaining = pathLength * scale;
 
-// 角度（水平基準：大きいほど水平）
-const dxUnit = Math.sin(angleRad);
-const dyUnit = Math.cos(angleRad);
+let currentX = probeXpx;
+let currentY = probeYpx;
 
-const lengthToBottom = (bottomY - probeYpx) / dyUnit;
+let dxUnit = Math.sin(angleRad);
+let dyUnit = Math.cos(angleRad);
 
-ctx.strokeStyle = "yellow";
+ctx.strokeStyle="yellow";
 ctx.beginPath();
-ctx.moveTo(probeXpx, probeYpx);
+ctx.moveTo(currentX,currentY);
 
-let defectX, defectY;
+let distanceToBottom = (bottomY - currentY) / dyUnit;
 
-if(pathPx <= lengthToBottom){
-
-    defectX = probeXpx - dxUnit * pathPx;
-    defectY = probeYpx + dyUnit * pathPx;
-
-    ctx.lineTo(defectX, defectY);
-
+if(remaining <= distanceToBottom){
+currentX -= dxUnit * remaining;
+currentY += dyUnit * remaining;
 }else{
-
-    const hitX = probeXpx - dxUnit * lengthToBottom;
-    const hitY = bottomY;
-
-    ctx.lineTo(hitX, hitY);
-
-    const remain = pathPx - lengthToBottom;
-
-    defectX = hitX - dxUnit * remain;
-    defectY = hitY - dyUnit * remain;
-
-    ctx.lineTo(defectX, defectY);
+currentX -= dxUnit * distanceToBottom;
+currentY = bottomY;
 }
 
+ctx.lineTo(currentX,currentY);
 ctx.stroke();
-
-// ===== 欠陥点 =====
-ctx.beginPath();
-ctx.arc(defectX, defectY, 6, 0, Math.PI * 2);
-ctx.fillStyle = "cyan";
-ctx.fill();
-
-// ===== mm座標表示 =====
-const defectXmm = (defectX - rootX) / scale;
-const defectYmm = (defectY - topY) / scale;
-
-ctx.fillStyle = "white";
-ctx.font = "16px sans-serif";
-ctx.fillText(
-"X: " + defectXmm.toFixed(1) + " mm   Y: " + defectYmm.toFixed(1) + " mm",
-20,
-30
-);
 
 }
 
 draw();
-
 </script>
 
 </body>
