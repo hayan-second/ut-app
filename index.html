@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UT App</title>
+
 <style>
 body{
 background:#111;
@@ -10,15 +13,18 @@ font-family:sans-serif;
 margin:0;
 padding:10px;
 }
+
 .controls{
 display:flex;
 flex-direction:column;
 gap:10px;
 }
+
 input{
 font-size:18px;
 padding:8px;
 }
+
 button{
 font-size:20px;
 padding:10px;
@@ -27,6 +33,7 @@ color:white;
 border:none;
 border-radius:8px;
 }
+
 canvas{
 width:100%;
 height:auto;
@@ -83,52 +90,44 @@ const angleRad = angleDeg * Math.PI / 180;
 const bottomY = topY + t * scale;
 const a = (t / Math.tan(60 * Math.PI / 180)) * scale;
 
-// ===== 開先図 =====
+// 開先図
 ctx.strokeStyle="red";
 ctx.lineWidth=2;
 
-// 左縦材
 ctx.beginPath();
 ctx.moveTo(rootX - gap*scale - 40, 40);
 ctx.lineTo(rootX - gap*scale - 40, 380);
 ctx.stroke();
 
-// 右縦材
 ctx.beginPath();
 ctx.moveTo(rootX, 40);
 ctx.lineTo(rootX, 380);
 ctx.stroke();
 
-// 上面
 ctx.beginPath();
 ctx.moveTo(rootX, topY);
 ctx.lineTo(600, topY);
 ctx.stroke();
 
-// 底面
 ctx.beginPath();
 ctx.moveTo(rootX, bottomY);
 ctx.lineTo(600, bottomY);
 ctx.stroke();
 
-// 開先
 ctx.beginPath();
 ctx.moveTo(rootX, topY);
 ctx.lineTo(rootX + a, topY);
 ctx.lineTo(rootX, bottomY);
 ctx.stroke();
 
-// ===== ビーム（直射＋1回反射）=====
-const probeXpx = rootX + probe * scale;
-const probeYpx = topY;
+// ビーム（直射＋1回反射）
+let currentX = rootX + probe * scale;
+let currentY = topY;
 
 let remaining = pathLength * scale;
 
-let currentX = probeXpx;
-let currentY = probeYpx;
-
-let dxUnit = -Math.sin(angleRad);
-let dyUnit = Math.cos(angleRad);
+let dx = -Math.sin(angleRad);
+let dy = Math.cos(angleRad);
 
 ctx.strokeStyle="yellow";
 ctx.beginPath();
@@ -138,30 +137,28 @@ for(let i=0;i<2;i++){
 
 let travel;
 
-if(dyUnit>0){
-travel=(bottomY-currentY)/dyUnit;
+if(dy>0){
+travel=(bottomY-currentY)/dy;
 }else{
-travel=(topY-currentY)/dyUnit;
+travel=(topY-currentY)/dy;
 }
 
 if(remaining<=travel){
-currentX+=dxUnit*remaining;
-currentY+=dyUnit*remaining;
+currentX+=dx*remaining;
+currentY+=dy*remaining;
 ctx.lineTo(currentX,currentY);
 break;
 }
 
-currentX+=dxUnit*travel;
-currentY+=dyUnit*travel;
+currentX+=dx*travel;
+currentY+=dy*travel;
 ctx.lineTo(currentX,currentY);
 
 remaining-=travel;
-dyUnit=-dyUnit;
-
+dy=-dy;
 }
 
 ctx.stroke();
-
 }
 
 draw();
