@@ -113,7 +113,7 @@ function draw(){
   ctx.lineTo(rootX, bottomY);
   ctx.stroke();
 
-  // ===== ビーム（直射＋1回反射）=====
+  // ===== ビーム =====
   let currentX = rootX + probe * scale;
   let currentY = topY;
 
@@ -152,6 +152,24 @@ function draw(){
   }
 
   ctx.stroke();
+
+  // ===== 欠陥点 =====
+  ctx.beginPath();
+  ctx.arc(currentX,currentY,6,0,Math.PI*2);
+  ctx.fillStyle="cyan";
+  ctx.fill();
+
+  // ===== mm表示 =====
+  const defectXmm = (currentX - rootX) / scale;
+  const defectYmm = (currentY - topY) / scale;
+
+  ctx.fillStyle="white";
+  ctx.font="16px sans-serif";
+  ctx.fillText(
+    "X: " + defectXmm.toFixed(1) + " mm   Y: " + defectYmm.toFixed(1) + " mm",
+    20,
+    30
+  );
 }
 
 draw();
