@@ -54,8 +54,7 @@ border-radius:10px;
 <input type="number" id="probeX" value="20">
 
 角度(°)
-<input type="range" id="angle" min="30" max="80" value="60" oninput="draw()">
-<span id="angleValue">60</span>°
+<input type="number" id="angle" value="60" step="0.1" oninput="draw()">
 
 ビーム経路長(mm)
 <input type="number" id="pathLength" value="30">
@@ -166,3 +165,4 @@ draw();
 
 </body>
 </html>
+
