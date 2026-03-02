@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UT App</title>
+<title>UT 完成版（原点① 精密反射）</title>
 
 <style>
 body{
@@ -20,156 +20,162 @@ body{
 }
 input{
   font-size:18px;
-  padding:8px;
-}
-button{
-  font-size:20px;
-  padding:10px;
-  background:#00aaff;
-  color:white;
-  border:none;
-  border-radius:8px;
+  padding:6px;
 }
 canvas{
+  background:#222;
   width:100%;
   height:auto;
-  background:#222;
+  border-radius:8px;
   margin-top:10px;
-  border-radius:10px;
 }
 </style>
 </head>
-
 <body>
 
 <div class="controls">
 板厚(mm)
 <input type="number" id="thickness" value="12" step="0.1" oninput="draw()">
 
-探触子位置(mm)
+探触子位置X(mm)
 <input type="number" id="probeX" value="20" step="0.1" oninput="draw()">
 
-角度(°)
+角度(°) ※垂直基準
 <input type="number" id="angle" value="60" step="0.1" oninput="draw()">
 
 ビーム経路長(mm)
-<input type="number" id="pathLength" value="30" step="0.1" oninput="draw()">
-
-<button onclick="draw()">表示</button>
+<input type="number" id="pathLength" value="40" step="0.1" oninput="draw()">
 </div>
 
-<canvas id="canvas" width="500" height="360"></canvas>
+<canvas id="canvas" width="600" height="420"></canvas>
 
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-const gap = 6;
 const scale = 8;
-const rootX = 250;
-const topY = 120;
+const gap = 6;
+
+// 原点＝上面 × ルート左端
+const originX = 260;
+const originY = 140;
 
 function draw(){
 
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  const t = parseFloat(document.getElementById("thickness").value);
-  const probe = parseFloat(document.getElementById("probeX").value);
-  const angleDeg = parseFloat(document.getElementById("angle").value);
-  const pathLength = parseFloat(document.getElementById("pathLength").value);
+const t = parseFloat(document.getElementById("thickness").value);
+const probe = parseFloat(document.getElementById("probeX").value);
+const angleDeg = parseFloat(document.getElementById("angle").value);
+const pathLength = parseFloat(document.getElementById("pathLength").value);
 
-  const angleRad = angleDeg * Math.PI / 180;
+const angleRad = angleDeg * Math.PI / 180;
+const bottomY = originY + t*scale;
 
-  const bottomY = topY + t * scale;
-  const a = (t / Math.tan(60 * Math.PI / 180)) * scale;
+// ===== 図面 =====
+ctx.strokeStyle="red";
+ctx.lineWidth=2;
 
-  // ===== 開先図 =====
-  ctx.strokeStyle="red";
-  ctx.lineWidth=2;
+// 左柱
+ctx.beginPath();
+ctx.moveTo(originX-120,40);
+ctx.lineTo(originX-120,380);
+ctx.stroke();
 
-  ctx.beginPath();
-  ctx.moveTo(rootX - gap*scale - 40, 40);
-  ctx.lineTo(rootX - gap*scale - 40, 380);
-  ctx.stroke();
+// 原点縦線
+ctx.beginPath();
+ctx.moveTo(originX,40);
+ctx.lineTo(originX,380);
+ctx.stroke();
 
-  ctx.beginPath();
-  ctx.moveTo(rootX, 40);
-  ctx.lineTo(rootX, 380);
-  ctx.stroke();
+// 上面
+ctx.beginPath();
+ctx.moveTo(originX,originY);
+ctx.lineTo(580,originY);
+ctx.stroke();
 
-  ctx.beginPath();
-  ctx.moveTo(rootX, topY);
-  ctx.lineTo(600, topY);
-  ctx.stroke();
+// 底面
+ctx.beginPath();
+ctx.moveTo(originX,bottomY);
+ctx.lineTo(580,bottomY);
+ctx.stroke();
 
-  ctx.beginPath();
-  ctx.moveTo(rootX, bottomY);
-  ctx.lineTo(600, bottomY);
-  ctx.stroke();
+// ルート6mm（底面）
+ctx.strokeStyle="white";
+ctx.lineWidth=4;
+ctx.beginPath();
+ctx.moveTo(originX,bottomY);
+ctx.lineTo(originX+gap*scale,bottomY);
+ctx.stroke();
 
-  ctx.beginPath();
-  ctx.moveTo(rootX, topY);
-  ctx.lineTo(rootX + a, topY);
-  ctx.lineTo(rootX, bottomY);
-  ctx.stroke();
+// 60°開先（右上）
+ctx.strokeStyle="yellow";
+ctx.lineWidth=2;
 
-  // ===== ビーム =====
-  let currentX = rootX + probe * scale;
-  let currentY = topY;
+let rise = t*scale;
+let run = rise/Math.tan(60*Math.PI/180);
 
-  let remaining = pathLength * scale;
+ctx.beginPath();
+ctx.moveTo(originX+gap*scale,bottomY);
+ctx.lineTo(originX+gap*scale+run,bottomY-rise);
+ctx.stroke();
 
-  let dx = -Math.sin(angleRad);
-  let dy = Math.cos(angleRad);
+// ===== ビーム（垂直基準・左下・精密反射）=====
+let currentX = originX + probe*scale;
+let currentY = originY;
 
-  ctx.strokeStyle="yellow";
-  ctx.beginPath();
-  ctx.moveTo(currentX,currentY);
+let remaining = pathLength*scale;
 
-  for(let i=0;i<2;i++){
+let dx = -Math.sin(angleRad);
+let dy =  Math.cos(angleRad);
 
-    let travel;
+ctx.strokeStyle="cyan";
+ctx.lineWidth=2;
+ctx.beginPath();
+ctx.moveTo(currentX,currentY);
 
-    if(dy>0){
-      travel=(bottomY-currentY)/dy;
-    }else{
-      travel=(topY-currentY)/dy;
-    }
+for(let i=0;i<2;i++){
 
-    if(remaining<=travel){
-      currentX+=dx*remaining;
-      currentY+=dy*remaining;
-      ctx.lineTo(currentX,currentY);
-      break;
-    }
+  let targetY = dy > 0 ? bottomY : originY;
+  let travel = (targetY - currentY) / dy;
 
-    currentX+=dx*travel;
-    currentY+=dy*travel;
+  if(remaining <= travel){
+    currentX += dx * remaining;
+    currentY += dy * remaining;
     ctx.lineTo(currentX,currentY);
-
-    remaining-=travel;
-    dy=-dy;
+    break;
   }
 
-  ctx.stroke();
+  // 正確にヒット位置へ吸着
+  currentX += dx * travel;
+  currentY = targetY;
 
-  // ===== 欠陥点 =====
-  ctx.beginPath();
-  ctx.arc(currentX,currentY,6,0,Math.PI*2);
-  ctx.fillStyle="cyan";
-  ctx.fill();
+  ctx.lineTo(currentX,currentY);
 
-  // ===== mm表示 =====
-  const defectXmm = (currentX - rootX) / scale;
-  const defectYmm = (currentY - topY) / scale;
+  remaining -= travel;
+  dy = -dy; // 反射
+}
 
-  ctx.fillStyle="white";
-  ctx.font="16px sans-serif";
-  ctx.fillText(
-    "X: " + defectXmm.toFixed(1) + " mm   Y: " + defectYmm.toFixed(1) + " mm",
-    20,
-    30
-  );
+ctx.stroke();
+
+// 欠陥点
+ctx.beginPath();
+ctx.arc(currentX,currentY,6,0,Math.PI*2);
+ctx.fillStyle="cyan";
+ctx.fill();
+
+// 座標表示（原点基準）
+let defectXmm = (currentX-originX)/scale;
+let defectYmm = (currentY-originY)/scale;
+
+ctx.fillStyle="white";
+ctx.font="16px sans-serif";
+ctx.fillText(
+"X: "+defectXmm.toFixed(1)+" mm   Y: "+defectYmm.toFixed(1)+" mm",
+20,
+30
+);
+
 }
 
 draw();
